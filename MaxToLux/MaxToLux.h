@@ -39,3 +39,22 @@
 #else
 #define MAX2017_OVERRIDE
 #endif
+
+class MaxToLux;
+
+class LuxRenderParams : public RenderGlobalContext {
+public:
+	RendType	rendType;				// View, blowup, region etc.
+	int			nMinx;
+	int			nMiny;
+	int			nMaxx;
+	int			nMaxy;
+
+    	LuxRenderParams();
+	void		SetDefaults();
+	//void		ComputeViewParams(const ViewParams&vp);
+	//Point3		RayDirection(float sx, float sy);
+
+	//int				NumRenderInstances();
+	//RenderInstance*	GetRenderInstance(int i);
+};
