@@ -58,6 +58,15 @@ __declspec(dllexport) int LibInitialize(void)
 	//return TRUE;
 }
 
+// Return version so can detect obsolete DLLs
+// This function returns a pre-defined constant indicating the version of 
+// the system under which it was compiled.  It is used to allow the system
+// to catch obsolete DLLs.
+__declspec(dllexport) ULONG LibVersion()
+{
+	return VERSION_3DSMAX;
+}
+
 __declspec(dllexport) ULONG CanAutoDefer()
 {
 	return FALSE;
