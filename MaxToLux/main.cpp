@@ -34,3 +34,14 @@ int controlsInit = FALSE;
 #define MAX_PLUGIN   2
 ClassDesc *classDescArray[MAX_PLUGIN];
 int classDescCount = 0;
+
+static BOOL InitMtlDLL(void)
+{
+	if (!classDescCount)
+	{
+		classDescArray[classDescCount++] = GetRendDesc();
+		classDescArray[classDescCount++] = GetLR_NullDesc();
+	}
+
+	return TRUE;
+}
