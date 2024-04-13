@@ -27,3 +27,7 @@
 #include <iostream>
 #include <string>
 #include <luxcore.h>
+#include <StopWatch.h>
+#include <ITabDialog.h>
+#include <interactiverender.h>
+#include <ISceneEventManager.h>
