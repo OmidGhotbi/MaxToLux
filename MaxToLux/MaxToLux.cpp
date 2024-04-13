@@ -79,3 +79,13 @@ MaxToLux::MaxToLux(BOOL loading)
 {
 	
 }
+
+MaxToLux::MaxToLux(IRenderSessionContext& sessionContext, const bool is_interactive_session)
+	: m_rendering_process(sessionContext.GetRenderingProcess())
+{
+	file = NULL;
+	sceneNode = NULL;
+	viewNode = NULL;
+	anyLights = FALSE;
+	nlts = nobs = 0;
+}
