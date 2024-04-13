@@ -23,3 +23,7 @@
 #ifndef MaxToLuxPCH__H
 
 #define MaxToLuxPCH_H
+
+#include "max.h"
+#include "resource.h"
+#include <iparamb2.h>
