@@ -91,3 +91,16 @@ public:
 		return false;
 	}
 };
+
+class MaxToLux : public Renderer, public ITabDialogObject {
+	public:
+
+		CRITICAL_SECTION csect;
+        
+    public:
+		inline bool bool_cast(int x) { return (x ? true : false); }
+		bool InActiveShade()
+		{
+			return bool_cast(isActiveShade);
+		}
+#endif
