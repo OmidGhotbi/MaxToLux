@@ -112,3 +112,28 @@ RefResult MaxToLux::NotifyRefChanged(const Interval &changeInt, RefTargetHandle 
 	}
 	return REF_SUCCEED;
 }
+
+//::Matrix3 camPos;
+
+int MaxToLux::Open(INode *scene, INode *vnode, ViewParams *viewPar, RendParams &rp, HWND hwnd, DefaultLight* defaultLights, int numDefLights, RendProgressCallback* prog)
+{
+	UNREFERENCED_PARAMETER(prog);
+	UNREFERENCED_PARAMETER(numDefLights);
+	UNREFERENCED_PARAMETER(defaultLights);
+	UNREFERENCED_PARAMETER(hwnd);
+	
+	if (rp.inMtlEdit)
+	{
+		
+		renderingMaterialPreview = true;
+		materialPreviewScene = Scene::Create();
+
+		lxmMesh.createMesh(scene, *materialPreviewScene, GetCOREInterface()->GetTime(), renderingMaterialPreview);
+	}
+	else
+	{
+		renderingMaterialPreview = false;
+	}
+
+	return 1;
+}
