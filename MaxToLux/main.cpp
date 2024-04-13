@@ -57,3 +57,8 @@ __declspec(dllexport) int LibInitialize(void)
 
 	//return TRUE;
 }
+
+__declspec(dllexport) ULONG CanAutoDefer()
+{
+	return FALSE;
+}
