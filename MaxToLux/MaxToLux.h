@@ -22,3 +22,8 @@
 
 #ifndef MaxToLux__H
 #define MaxToLux__H
+
+#include "maxtextfile.h"
+#include <iostream>
+#include <string>
+#include <luxcore.h>
