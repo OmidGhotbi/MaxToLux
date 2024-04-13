@@ -39,3 +39,11 @@ MaxToLuxLights lxmLights;
 MaxToLuxMaterials lxmMaterials;
 MaxToLuxUtils lxmUtils;
 MaxToLuxMesh lxmMesh;
+
+namespace luxcore
+{
+	#include <luxcore.h>
+}
+
+using namespace luxcore;
+using namespace luxrays;
