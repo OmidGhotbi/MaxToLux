@@ -137,3 +137,11 @@ int MaxToLux::Open(INode *scene, INode *vnode, ViewParams *viewPar, RendParams &
 
 	return 1;
 }
+
+void IMaxToLux::BeginSession()
+{
+}
+
+void IMaxToLux::EndSession()
+{
+}
