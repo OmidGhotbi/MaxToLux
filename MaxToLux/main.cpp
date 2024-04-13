@@ -45,3 +45,15 @@ static BOOL InitMtlDLL(void)
 
 	return TRUE;
 }
+
+__declspec(dllexport) int LibInitialize(void)
+{
+	//#pragma message(TODO("Perform initialization here."))
+	
+	typedef int(*LibInitializeFunc)();
+	auto RealLibInitialize =
+		reinterpret_cast<LibInitializeFunc>(GetProcAddress(hInstance, "LibInitialize"));
+	return RealLibInitialize ? RealLibInitialize() : InitMtlDLL();
+
+	//return TRUE;
+}
