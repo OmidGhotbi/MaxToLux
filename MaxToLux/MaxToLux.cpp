@@ -30,3 +30,6 @@
 #include "main.h"
 #include "MaxToLux.h"
 #include "maxscript/maxscript.h"
+
+#include <vector>
+#include <thread>
