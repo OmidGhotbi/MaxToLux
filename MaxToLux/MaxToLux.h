@@ -58,3 +58,36 @@ public:
 	//int				NumRenderInstances();
 	//RenderInstance*	GetRenderInstance(int i);
 };
+
+class IMaxToLux : public IInteractiveRender, ReferenceMaker, ActionCallback
+{
+public:
+	void AbortRender() MAX2017_OVERRIDE;
+
+private:
+	IParamBlock2* pblock;
+
+public:
+	///
+	IMaxToLux(MaxToLux* luxRen);
+	~IMaxToLux();
+	
+	void BeginSession() override;
+	void EndSession() override;
+
+#if MAX_PRODUCT_YEAR_NUMBER >= 2015
+	BOOL AnyUpdatesPending() override;
+#endif
+
+public:
+	MaxToLux* luxRender = nullptr;
+
+	IIRenderMgr *pIIRenderMgr;
+
+	bool IsRunning() const
+	{
+		//if (mActiveShader)
+			//return mActiveShader->IsRunning();
+		return false;
+	}
+};
