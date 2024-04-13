@@ -30,3 +30,7 @@ extern ClassDesc2* GetLR_NullDesc();
 HINSTANCE hInstance;
 HINSTANCE hInstanceAdvance;
 int controlsInit = FALSE;
+
+#define MAX_PLUGIN   2
+ClassDesc *classDescArray[MAX_PLUGIN];
+int classDescCount = 0;
