@@ -33,3 +33,9 @@
 
 #include <vector>
 #include <thread>
+
+MaxToLuxCamera lxmCamera;
+MaxToLuxLights lxmLights;
+MaxToLuxMaterials lxmMaterials;
+MaxToLuxUtils lxmUtils;
+MaxToLuxMesh lxmMesh;
