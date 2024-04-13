@@ -47,3 +47,7 @@ namespace luxcore
 
 using namespace luxcore;
 using namespace luxrays;
+
+extern BOOL FileExists(const TCHAR *filename);
+float* pixels;
+bool defaultlightset = true;
