@@ -31,3 +31,11 @@
 #include <ITabDialog.h>
 #include <interactiverender.h>
 #include <ISceneEventManager.h>
+
+#define REND_CLASS_ID Class_ID(98,0);
+
+#if MAX_PRODUCT_YEAR_NUMBER >= 2017
+#define MAX2017_OVERRIDE override
+#else
+#define MAX2017_OVERRIDE
+#endif
