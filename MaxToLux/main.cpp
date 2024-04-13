@@ -23,3 +23,10 @@
 
 #include "main.h"
 #include <string>
+
+extern ClassDesc2* GetRendDesc();
+extern ClassDesc2* GetLR_NullDesc();
+
+HINSTANCE hInstance;
+HINSTANCE hInstanceAdvance;
+int controlsInit = FALSE;
