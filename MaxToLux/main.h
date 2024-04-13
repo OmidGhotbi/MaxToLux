@@ -27,3 +27,9 @@
 #include "max.h"
 #include "resource.h"
 #include <iparamb2.h>
+
+extern HINSTANCE hInstance;
+
+TCHAR *GetString(int id);
+
+#endif
