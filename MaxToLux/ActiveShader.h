@@ -19,3 +19,58 @@
 * See the License for the specific language governing permissions and     *
 * limitations under the License.                                          *
 ***************************************************************************/
+
+#pragma once
+
+#include "parser/Synchronizer.h"
+#include "ParamBlock.h"
+#include <iparamb2.h>
+#include <interactiverender.h>
+#include <atomic>
+
+
+class ActiveShadeRenderCore;
+class ActiveShader;
+class ActiveShadeBitmapWriter;
+
+class ActiveShadeSynchronizerBridge : public SynchronizerBridge
+{
+private:
+	class ActiveShader *mActiveShader;
+	
+public:
+	
+	ActiveShadeSynchronizerBridge(class ActiveShader *as)
+		: mActiveShader(as)
+	{
+	}
+
+	inline const TimeValue t() override
+	{
+		return GetCOREInterface()->GetTime();
+	}
+
+	void LockRenderThread() override;
+	void UnlockRenderThread() override;
+	void StartToneMapper() override;
+	void StopToneMapper() override;
+	void SetToneMappingExposure(float exposure) override;
+	void ClearFB() override;
+	IRenderProgressCallback *GetProgressCB() override;
+	IParamBlock2 *GetPBlock() override;
+	bool RenderThreadAlive() override;
+	const DefaultLight *GetDefaultLights(int &numDefLights) const override;
+	void EnableAlphaBuffer();
+	void DisableAlphaBuffer();
+	void SetTimeLimit(int val);
+	void SetPassLimit(int val);
+	void SetLimitType(int type);
+	void ResetInteractiveTermination();
+};
+
+protected:
+	ParsedView ParseView();
+
+	void CustomCPUSideSynch() override;
+	class ActiveShader *mActiveShader;
+};
