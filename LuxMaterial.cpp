@@ -1,3 +1,4 @@
+
 //**************************************************************************/
 // Copyright (c) 2015-2019 Luxrender.
 // All rights reserved.
@@ -466,3 +467,339 @@ std::string MaxToLuxMaterials::getTextureName(int paramID, ::Mtl* mat)
 		return "";
 	}
 }
+
+std::string MaxToLuxMaterials::getMaterialBumpTexturePath(::Mtl* mat)
+{
+	if ((mat->ClassID() == LR_INTERNAL_MATTE_CLASSID))
+	{
+		// 4 is diffuse, 6 is bumpmap
+		return getTexturePathFromParamBlockID(3, mat);
+	}
+	else
+	{
+		return "";
+	}
+}
+
+std::string MaxToLuxMaterials::getMaterialDiffuseTexturePath(::Mtl* mat)
+{
+	if (mat->ClassID() == LR_INTERNAL_MAT_TEMPLATE_CLASSID)
+	{
+		return getTexturePathFromParamBlockID(2, mat);
+	}
+	if ((mat->ClassID() == LR_INTERNAL_MATTE_CLASSID))
+	{
+		// 4 is diffuse, 6 is bumpmap
+		return getTexturePathFromParamBlockID(1, mat);
+	}
+	if ((mat->ClassID() == LR_MATTE_TRANSLUCENT_CLASSID))
+	{
+		// 4 is diffuse, 6 is bumpmap
+		return getTexturePathFromParamBlockID(4, mat);
+	}
+	else
+	{
+		return "";
+	}
+}
+
+Point3 MaxToLuxMaterials::getMaterialColor(int pblockIndex ,::Mtl* mat)
+{
+	std::string objString;
+	::Point3 diffcolor;
+	Interval      ivalid;
+	IParamBlock2 *pBlock = mat->GetParamBlock(0);
+	pBlock->GetValue(pblockIndex, GetCOREInterface()->GetTime(), diffcolor, ivalid);
+
+	return diffcolor;
+}
+
+Point3 MaxToLuxMaterials::getMaterialDiffuseColor(::Mtl* mat)
+{
+	std::string objString;
+	::Point3 diffcolor;
+	Interval      ivalid;
+	diffcolor.x = 155;
+	diffcolor.y = 155;
+	diffcolor.z = 155;
+
+	if (mat->ClassID() == LR_INTERNAL_MATTE_CLASSID)
+	{
+		IParamBlock2 *pBlock = mat->GetParamBlock(0);
+		pBlock->GetValue(3, GetCOREInterface()->GetTime(), diffcolor, ivalid);
+	}
+	if (mat->ClassID() == LR_INTERNAL_MATTELIGHT_CLASSID)
+	{
+		IParamBlock2 *pBlock = mat->GetParamBlock(0);
+		pBlock->GetValue(3, GetCOREInterface()->GetTime(), diffcolor, ivalid);
+	}
+	if (mat->ClassID() == LR_INTERNAL_MAT_TEMPLATE_CLASSID)
+	{
+		IParamBlock2 *pBlock = mat->GetParamBlock(0);
+		pBlock->GetValue(3, GetCOREInterface()->GetTime(), diffcolor, ivalid);
+	}
+	if (mat->ClassID() == STANDARDMATERIAL_CLASSID || mat->ClassID() == ARCHITECTURAL_CLASSID)
+	{
+		diffcolor = mat->GetDiffuse(0);
+	}
+	if (mat->ClassID() == LR_MATTE_TRANSLUCENT_CLASSID)
+	{
+		diffcolor = mat->GetDiffuse(0);
+	}
+		 
+	return diffcolor;
+}
+
+void MaxToLuxMaterials::exportMaterial(Mtl* mat, luxcore::Scene &scene)
+{
+	const wchar_t *matName = L"";
+	const wchar_t *matPath = L"";
+	
+	renderOptions::materialStatics Options;
+	matName = mat->GetName();
+
+
+	std::string tmpMatName = lmutil->ToNarrow(matName);
+	if (tmpMatName == "")
+	{
+		tmpMatName = "undefinedMaterial";
+		matName = L"undefinedMaterial";
+	}
+
+	lmutil->removeUnwatedChars(tmpMatName);
+	std::wstring replacedMaterialName = std::wstring(tmpMatName.begin(), tmpMatName.end());
+	matName = replacedMaterialName.c_str();
+
+	OutputDebugStringW(L"\nMaxToLuxMaterials.cpp -> Exporting material: ");
+	OutputDebugStringW(matName);
+	OutputDebugStringW(L"\n");
+
+	std::string objString = "";
+	objString.append(Options.sceneMaterial);
+	objString.append(lmutil->ToNarrow(matName));
+	std::string currmat = objString;
+
+	objString.append(".type");
+
+	if (mat->ClassID() == ARCHITECTURAL_CLASSID)
+	{
+		const wchar_t *matType = L"";
+		luxrays::Properties prop;
+		::Point3 colorDiffuse;
+		float ioroutside = 0.0f;
+		float iorinside = 0.0f;
+
+		colorDiffuse = getMaterialDiffuseColor(mat);
+
+		for (int i = 0, count = mat->NumParamBlocks(); i < count; ++i)
+		{
+			IParamBlock2 *pBlock = mat->GetParamBlock(i);
+			matType = pBlock->GetStr(0, GetCOREInterface()->GetTime(), 0);
+			//2 is ior
+			iorinside = pBlock->GetFloat(2, GetCOREInterface()->GetTime(), 0);
+			ioroutside = iorinside;
+		}
+		OutputDebugStringW(matType);
+
+		if ((lmutil->getstring(matType) == "Metal - Brushed"))
+		{
+			//metal2
+			OutputDebugStringW(_T("\nCreating Metal2 material.\n"));
+
+			std::string tmpmat;// = currmat;
+			tmpmat.append(currmat + ".type = metal2");
+			tmpmat.append("\n");
+			prop.SetFromString(tmpmat);
+			scene.Parse(prop);
+		}
+
+		//Glass - Clear
+		else if ((lmutil->getstring(matType) == "Glass - Translucent") || (lmutil->getstring(matType) == "Glass - Clear"))
+		{
+			OutputDebugStringW(_T("\nCreating Glass.\n"));
+
+			std::string tmpmat;
+			tmpmat.append(currmat + ".type = glass");
+			tmpmat.append("\n");
+
+			tmpmat.append(currmat + ".ioroutside = " + std::to_string(ioroutside));
+			tmpmat.append("\n");
+
+			tmpmat.append(currmat + ".iorinside = " + std::to_string(1.0));
+			tmpmat.append("\n");
+
+			tmpmat.append(currmat + Options.materialKr + std::to_string(colorDiffuse.x) + " " + std::to_string(colorDiffuse.y) + " " + std::to_string(colorDiffuse.z));
+			tmpmat.append("\n");
+
+			prop.SetFromString(tmpmat);
+			scene.Parse(prop);
+		}
+		else if ((lmutil->getstring(matType) == "Mirror"))
+		{
+			//metal2
+			OutputDebugStringW(_T("\nCreating Mirror material.\n"));
+			scene.Parse(
+				luxrays::Property(objString)("mirror") <<
+				luxrays::Property("")("")
+				);
+		}
+		else
+		{
+			OutputDebugStringW(_T("\nCreating fallback architectural material for unsupported template.\n"));
+			scene.Parse(
+				luxrays::Property(objString)("matte") <<
+				luxrays::Property("")("")
+				);
+		}
+	}
+	else if (mat->ClassID() == LR_INTERNAL_MATTELIGHT_CLASSID)
+	{
+		OutputDebugStringW(L"\n Creating Emission material\n");
+		scene.Parse(
+			luxrays::Property(objString)("matte") <<
+			luxrays::Property("")("")
+			);
+
+		::Point3 diffcol;
+		diffcol = getMaterialDiffuseColor(mat);
+		::std::string tmpMatStr;
+
+		tmpMatStr.append(Options.sceneMaterial);
+		tmpMatStr.append(lmutil->ToNarrow(matName));
+		tmpMatStr.append(".emission");
+		
+		scene.Parse(
+			luxrays::Property(tmpMatStr)(float(diffcol.x), float(diffcol.y), float(diffcol.z)) <<
+			luxrays::Property("")("")
+			);
+		tmpMatStr = "";
+	}
+	/*else if (mat->ClassID() == LUXCORE_CHEKER_CLASSID)
+	{
+		scene.Parse(
+			luxrays::Property(objString)("matte") <<
+			luxrays::Property("")("")
+			);
+
+		//mprintf(_T("\n Creating Cheker material %i \n"));
+		scene.Parse(
+			luxrays::Property("scene.textures.check.type")("checkerboard2d") <<
+			luxrays::Property("scene.textures.check.texture1")("0.7 0.0 0.0") <<
+			luxrays::Property("scene.textures.check.texture2")("0.7 0.7 0.0") <<
+			luxrays::Property("scene.textures.check.mapping.uvscale")(16.0f, 16.0f)
+			);
+		//mprintf(_T("\n Creating Cheker 01 %i \n"));
+	}*/
+	else if ((mat->ClassID() == LR_INTERNAL_MATTE_CLASSID))
+	{
+		luxrays::Properties prop;
+
+		scene.Parse(
+			luxrays::Property(objString)("matte") <<
+			luxrays::Property("")("")
+			);
+
+		std::string bumpMapName = "";
+		std::string bumpMapPath = "";
+		std::string diffuseMapName = "";
+		std::string tmpTexString;
+
+		//Check if there is a bumpmap texture assigned.
+		if (getMaterialBumpTexturePath(mat) != "")
+		{
+			std::string bumpTexName = getBumpTextureName(mat);
+			if (bumpTexName != "")
+			{
+				luxrays::Properties prop;
+				std::string bumpString;
+				bumpString.append(Options.sceneTexture + bumpTexName + ".type = imagemap");
+				bumpString.append("\n");
+				bumpString.append(Options.sceneTexture + bumpTexName + Options.textureFile + "\"" + getMaterialBumpTexturePath(mat) + "\"");
+				bumpString.append("\n");
+				bumpString.append(Options.sceneTexture + bumpTexName + ".mapping.uvscale = 1.0 1.0");
+				bumpString.append("\n");
+				//bumpMapPath = getMaterialBumpTexturePath(mat);
+				bumpMapName = bumpTexName;
+
+				prop.SetFromString(bumpString);
+				scene.Parse(prop);
+			}
+		}
+
+		//Check if there is a diffuse material assigned.
+		//if (exportTexturesInMaterial(mat) == "")
+		if (getMaterialDiffuseTexturePath(mat) == "")
+		{
+			OutputDebugStringW(L"\n Export Color Start --------------- \n");
+
+			/*::Point3 diffcol;
+			diffcol = getMaterialDiffuseColor(mat);
+			::std::string tmpMatStr;
+			tmpMatStr.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + ".kd");
+
+			scene.Parse(
+				luxrays::Property(tmpMatStr)(float(diffcol.x), float(diffcol.y), float(diffcol.z)) <<
+				luxrays::Property("")("")
+				);
+			tmpMatStr = "";*/
+
+			::Point3 kd;
+			kd = getMaterialColor(0, mat);
+			tmpTexString.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + Options.materialKd + std::to_string(kd.x) + " " + std::to_string(kd.y) + " " + std::to_string(kd.z));
+			tmpTexString.append("\n");
+		}
+		else if (getMaterialDiffuseTexturePath(mat) == "checker")
+		{
+			//std::string diffuseMapName = getDiffuseTextureName(mat);
+			OutputDebugStringW(L"\n Export Checker Texture Start --------------- \n");
+
+			tmpTexString.append(Options.sceneTexture + "check" + ".type = checkerboard2d");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + "check" + ".texture1 = 0.7");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + "check" + ".texture2 = 0.0");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + "check" + ".mapping.type = uvmapping2d");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + "check" + ".mapping.uvscale = 16.0 16.0");
+			tmpTexString.append("\n");
+
+			tmpTexString.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + Options.materialKd + "check");
+			tmpTexString.append("\n");
+
+			OutputDebugStringW(L"\n Export Checker Texture End  --------------- \n");
+		}
+		else
+		{
+			std::string diffuseMapName = getDiffuseTextureName(mat);
+			OutputDebugStringW(L"\n Export Texture Start --------------- \n");
+			//std::wstring replacedMaterialPath = std::wstring(getMaterialDiffuseTexturePath(mat).begin(), getMaterialDiffuseTexturePath(mat).end());
+			//matPath = replacedMaterialPath.c_str();
+			//OutputDebugStringW(matPath);
+
+			//tmpTexString.append(exportTexturesInMaterial(mat,"kd"));
+			tmpTexString.append(Options.sceneTexture + diffuseMapName + ".type = imagemap");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + diffuseMapName + Options.textureFile + getMaterialDiffuseTexturePath(mat));
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneTexture + diffuseMapName + ".mapping.uvscale = 1.0 1.0");
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + Options.materialKd + diffuseMapName);
+			tmpTexString.append("\n");
+
+			OutputDebugStringW(L"\n Export Texture End  --------------- \n");
+		}
+
+		if (bumpMapName != "")
+		{
+			tmpTexString.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + ".bumptex = " + bumpMapName);
+			tmpTexString.append("\n");
+			tmpTexString.append(Options.sceneMaterial + lmutil->ToNarrow(matName) + ".bumpsamplingdistance = 1.0");
+			tmpTexString.append("\n");
+		}
+
+		tmpTexString.append(getLightEmission(mat));
+		
+		prop.SetFromString(tmpTexString);
+		scene.Parse(prop);
+	}
